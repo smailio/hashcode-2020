@@ -32,10 +32,15 @@ def parse_input_file(path):
         }
 
 
+def get_score(signup_duration, book_values, books_per_day, signup_day, end_day):
+    return 0
+
+
 def main():
     print("hello world !")
+    data = parse_input_file("input/a_example.txt")
     from pprint import pprint
-    pprint(parse_input_file("input/a_example.txt"))
+    pprint(data)
 
 
 if __name__ == '__main__':

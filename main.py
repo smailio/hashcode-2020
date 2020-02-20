@@ -1,5 +1,4 @@
 def grouped(iterable, n):
-    "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
     return zip(*[iter(iterable)]*n)
 
 
@@ -32,8 +31,54 @@ def parse_input_file(path):
         }
 
 
-def get_score(signup_duration, book_values, books_per_day, signup_day, end_day):
-    return 0
+def get_score(
+        signup_duration: int, book_ids: tuple, book_values: tuple, books_per_day: int, signup_day, end_day,
+        scanned_book_ids: list,
+):
+    assert len(book_ids) == len(book_values)
+    book_index = tuple(i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
+    book_ids = tuple(book_ids[i] for i in book_index)
+    book_values = tuple(book_values[i] for i in book_index)
+    book_values_and_ids = tuple(zip(book_values, book_ids))
+    """
+    book_values_and_ids = ((0, 3), (2, 4))
+    """
+    book_values_and_ids = sorted(book_values_and_ids)
+    book_values = tuple(value for value, _ in book_values_and_ids)
+    book_ids = tuple(i for _, i in book_values_and_ids)
+    scan_days = end_day - signup_day + 1 - signup_duration
+    value = 0
+    i = 0
+    sent_ids = []
+    for day in range(scan_days):
+        stop_i = min(i + books_per_day, len(book_values))
+        value += sum(book_values[i:stop_i])
+        sent_ids.extend([index for index in book_ids[i:stop_i]])
+        i = stop_i
+        if stop_i >= len(book_values):
+            break
+    return value, sent_ids
+
+
+def test_get_score():
+    signup_duration = 2
+    book_ids = (0, 2, 3)
+    book_values = (1, 2, 3)
+    books_per_day = 2
+    signup_day = 2
+    end_day = 5
+    scanned_book_ids = [2]
+    value, sent_ids = get_score(
+        signup_duration=signup_duration,
+        book_ids=book_ids,
+        book_values=book_values,
+        books_per_day=books_per_day,
+        signup_day=signup_day,
+        end_day=end_day,
+        scanned_book_ids=scanned_book_ids,
+    )
+    print(value)
+    print(sent_ids)
 
 
 def get_selection_score(problem, library_selection):

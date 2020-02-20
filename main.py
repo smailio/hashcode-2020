@@ -31,8 +31,45 @@ def parse_input_file(path):
         }
 
 
-def get_score(signup_duration, book_values, books_per_day, signup_day, end_day):
-    return 0
+def get_score(
+        signup_duration: int, book_ids: tuple, book_values: tuple, books_per_day: int, signup_day, end_day,
+        scanned_book_ids: list,
+):
+    book_index = (i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
+    book_ids = (book_ids[i] for i in book_index)
+    book_values = (book_values[i] for i in book_index)
+    book_values_and_ids = ((book_ids[i], book_values[i]) for i in range(len(book_ids)))
+    book_values = sorted(book_values)
+    scan_days = end_day - signup_day + 1 - signup_duration
+    value = 0
+    i = 0
+    for day in range(scan_days):
+        stop_i = min(i + books_per_day, len(book_values))
+        value += sum(book_values[i:stop_i])
+        i = stop_i
+        if stop_i >= len(book_values):
+            break
+        day += 1
+    return value
+
+
+def test_get_score():
+    signup_duration = 2
+    book_ids = (0, 2, 3, 5, 6)
+    book_values = (1, 2, 3, 4, 5)
+    books_per_day = 2
+    signup_day = 2
+    end_day = 5
+    scanned_book_ids = []
+    print(get_score(
+        signup_duration=signup_duration,
+        book_ids=book_ids,
+        book_values=book_values,
+        books_per_day=books_per_day,
+        signup_day=signup_day,
+        end_day=end_day,
+        scanned_book_ids=scanned_book_ids,
+    ))
 
 
 def get_selection_score(problem, library_selection):

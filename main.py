@@ -35,7 +35,7 @@ def parse_input_file(path):
 def main():
     print("hello world !")
     from pprint import pprint
-    pprint(parse_input_file("/home/anis/Projects/hashcode-2020/a_example.txt"))
+    pprint(parse_input_file("input/a_example.txt"))
 
 
 if __name__ == '__main__':

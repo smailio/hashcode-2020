@@ -32,7 +32,24 @@ def parse_input_file(path):
 
 
 def get_score(signup_duration, book_values, books_per_day, signup_day, end_day):
-    pass
+    return 0
+
+
+def get_selection_score(problem, library_selection):
+    """
+
+    :param problem: {
+            'nb_books': nb_books,
+            'nb_libraries': nb_libraries,
+            'nb_days': nb_days,
+            'books_score': books_score,
+            'libraries': list(parse_libraries()),
+            '
+        }
+    :param library_selection : ["library_id_1", 'library_id_5"]
+    :return:
+    """
+    return 0
 
 
 def submit_solutions(d: [{}]):
@@ -41,6 +58,15 @@ def submit_solutions(d: [{}]):
     :param d: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
     """
     pass
+
+
+def brut_solve(problem, day, librairies_selection):
+    def this_day_possibilities():
+        for n_day, library in enumerate(problem["librairies"]):
+            score_with_this_libray = brut_solve(problem, librairies_selection + [library])
+            score_without_this_library = get_selection_score(problem, librairies_selection + [library])
+            if score_with_this_libray > score_with_this_libray:
+                return
 
 
 def main():

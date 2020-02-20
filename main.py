@@ -99,7 +99,7 @@ def get_selection_score(problem, library_selection):
     day = 0
     nb_days = problem['nb_days']
     scanned_book_ids = []
-    print("li", library_selection)
+    sending_record = []
     for x in library_selection:
         library_id = x['library_id']
         library = problem['libraries'][library_id]
@@ -118,11 +118,14 @@ def get_selection_score(problem, library_selection):
             end_day=nb_days - 1,
             scanned_book_ids=scanned_book_ids,
         )
-        print("added", added)
         value += added
         scanned_book_ids.extend(new_scanned_book_ids)
-
-    return value
+        sending_record.append([
+            library_id,
+            len(new_scanned_book_ids),
+            new_scanned_book_ids,
+        ])
+    return value, sending_record
 
 
 def submit_solutions(solutions: [{}]):
@@ -134,7 +137,6 @@ def submit_solutions(solutions: [{}]):
 
 
 def brut_force_solve(problem, libraries_selection):
-    # print("bfs",  libraries_selection)
     best_selection = []
     selected_ids = [l['library_id'] for l in libraries_selection]
     print("selected_ids ", selected_ids)

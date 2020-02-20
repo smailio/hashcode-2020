@@ -43,7 +43,7 @@ def get_score(
     """
     book_values_and_ids = ((0, 3), (2, 4))
     """
-    book_values_and_ids = sorted(book_values_and_ids)
+    book_values_and_ids = sorted(book_values_and_ids, reverse=True)
     book_values = tuple(value for value, _ in book_values_and_ids)
     book_ids = tuple(i for _, i in book_values_and_ids)
     scan_days = end_day - signup_day + 1 - signup_duration
@@ -92,11 +92,35 @@ def get_selection_score(problem, library_selection):
             'libraries': list(parse_libraries()),
             '
         }
-    :param library_selection : ["library_id_1", 'library_id_5"]
     :param library_selection : [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
     :return:
     """
-    return 0
+    value = 0
+    day = 0
+    nb_days = problem['nb_days']
+    scanned_book_ids = []
+    for x in library_selection:
+        library_id = x['library_id']
+        library = problem['libraries'][library_id]
+        signup_duration = library['signup_time']
+        book_ids = library['l_book_ids']
+        book_values = tuple(problem['books_score'][i] for i in book_ids)
+        books_per_day = library['shipping_rate']
+        signup_day = day
+        day += signup_duration
+        added, new_scanned_book_ids = get_score(
+            signup_duration=signup_duration,
+            book_ids=book_ids,
+            book_values=book_values,
+            books_per_day=books_per_day,
+            signup_day=signup_day,
+            end_day=nb_days - 1,
+            scanned_book_ids=scanned_book_ids,
+        )
+        value += added
+        scanned_book_ids.extend(new_scanned_book_ids)
+
+    return value
 
 
 def submit_solutions(solutions: [{}]):
@@ -109,8 +133,8 @@ def submit_solutions(solutions: [{}]):
 
 def brut_force_solve(problem, libraries_selection):
     best_selection = []
-    for library_id, library in enumerate(problem["librairies"]):
-        if library_id not in libraries_selection:
+    for library_id, library in enumerate(problem["libraries"]):
+        if library_id not in [l['library_id'] for l in libraries_selection]:
             best_selection_that_include_this_library = brut_force_solve(
                 problem,
                 libraries_selection + [{"library_id": library_id, "nb_books": len(library["l_books_ids"]),
@@ -130,7 +154,8 @@ def brut_force_solve(problem, libraries_selection):
 def main():
     print("hello world !")
     from pprint import pprint
-    pprint(parse_input_file("input/a_example.txt"))
+    problem = parse_input_file("input/a_example.txt")
+    pprint(brut_force_solve(problem, []))
 
 
 if __name__ == '__main__':

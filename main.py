@@ -71,8 +71,9 @@ def brut_solve(problem, day, librairies_selection):
 
 def main():
     print("hello world !")
+    data = parse_input_file("input/a_example.txt")
     from pprint import pprint
-    pprint(parse_input_file("input/a_example.txt"))
+    pprint(data)
 
 
 if __name__ == '__main__':

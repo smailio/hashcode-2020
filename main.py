@@ -36,10 +36,13 @@ def get_score(
         scanned_book_ids: list,
 ):
     assert len(book_ids) == len(book_values)
-    book_index = (i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
+    book_index = tuple(i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
     book_ids = tuple(book_ids[i] for i in book_index)
     book_values = tuple(book_values[i] for i in book_index)
-    book_values_and_ids = tuple((book_ids[i], book_values[i]) for i in range(len(book_ids)))
+    book_values_and_ids = tuple(zip(book_values, book_ids))
+    """
+    book_values_and_ids = ((0, 3), (2, 4))
+    """
     book_values_and_ids = sorted(book_values_and_ids)
     book_values = tuple(value for value, _ in book_values_and_ids)
     book_ids = tuple(i for _, i in book_values_and_ids)
@@ -64,7 +67,7 @@ def test_get_score():
     books_per_day = 2
     signup_day = 2
     end_day = 5
-    scanned_book_ids = []
+    scanned_book_ids = [2]
     value, sent_ids = get_score(
         signup_duration=signup_duration,
         book_ids=book_ids,

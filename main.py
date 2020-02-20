@@ -137,30 +137,32 @@ def brut_force_solve(problem, libraries_selection):
     # print("bfs",  libraries_selection)
     best_selection = []
     selected_ids = [l['library_id'] for l in libraries_selection]
-
+    print("selected_ids ", selected_ids)
     available = [
         library_id
         for library_id, library in enumerate(problem["libraries"])
         if library_id not in selected_ids
     ]
-    if not available:
+    print("available ", available)
+    if len(available) == 0:
         return libraries_selection
     for library_id, library in enumerate(problem["libraries"]):
         if library_id in available:
-            libraries_selection += [{
+            print("available2", available)
+            yololo = libraries_selection + [{
                 "library_id": library_id,
                 "nb_books": len(library["l_books_ids"]),
                 "book_ids": library["l_books_ids"]
             }]
             best_selection_that_include_this_library = brut_force_solve(
                 problem,
-                libraries_selection
+                yololo
             )
             this_selection_score = get_selection_score(
                 problem,
                 best_selection_that_include_this_library
             )
-            print("this_selection", this_selection_score, libraries_selection)
+            print("this_selection", this_selection_score, yololo)
             best_selection_score = get_selection_score(problem, best_selection)
             if this_selection_score >= best_selection_score:
                 best_selection = best_selection_that_include_this_library

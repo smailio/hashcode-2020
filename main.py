@@ -48,12 +48,13 @@ def get_selection_score(problem, library_selection):
             '
         }
     :param library_selection : ["library_id_1", 'library_id_5"]
+    :param library_selection : [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
     :return:
     """
     return 0
 
 
-def submit_solutions(d: [{}]):
+def submit_solutions(solutions: [{}]):
     """
 
     :param d: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
@@ -61,13 +62,24 @@ def submit_solutions(d: [{}]):
     pass
 
 
-def brut_solve(problem, day, librairies_selection):
-    def this_day_possibilities():
-        for n_day, library in enumerate(problem["librairies"]):
-            score_with_this_libray = brut_solve(problem, librairies_selection + [library])
-            score_without_this_library = get_selection_score(problem, librairies_selection + [library])
-            if score_with_this_libray > score_with_this_libray:
-                return
+def brut_force_solve(problem, libraries_selection):
+    best_selection = []
+    for library_id, library in enumerate(problem["librairies"]):
+        if library_id not in libraries_selection:
+            best_selection_that_include_this_library = brut_force_solve(
+                problem,
+                libraries_selection + [{"library_id": library_id, "nb_books": len(library["l_books_ids"]),
+                                        "book_ids": library["l_books_ids"]}]
+            )
+            this_selection_score = get_selection_score(
+                problem,
+                best_selection_that_include_this_library
+            )
+            best_selection_score = get_selection_score(problem, best_selection)
+            if this_selection_score > best_selection_score:
+                best_selection = best_selection_that_include_this_library
+
+    return best_selection
 
 
 def main():

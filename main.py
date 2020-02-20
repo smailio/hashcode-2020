@@ -31,6 +31,10 @@ def parse_input_file(path):
         }
 
 
+def get_score(signup_duration, book_values, books_per_day, signup_day, end_day):
+    pass
+
+
 def submit_solutions(d: [{}]):
     """
 

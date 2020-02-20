@@ -1,3 +1,6 @@
+import random
+
+
 def grouped(iterable, n):
     return zip(*[iter(iterable)] * n)
 
@@ -143,17 +146,19 @@ def brut_force_solve(problem, libraries_selection):
     best_selection = []
     selected_ids = [l['library_id'] for l in libraries_selection]
     print("selected_ids ", selected_ids)
-    available = [
+    all_availabe = [
         library_id
         for library_id, library in enumerate(problem["libraries"])
         if library_id not in selected_ids
     ]
-    print("available ", available)
+    available = random.sample(all_availabe, min(2, len(all_availabe)))
+    # print("available ", available)
     if len(available) == 0:
         return libraries_selection
     for library_id, library in enumerate(problem["libraries"]):
+
         if library_id in available:
-            print("available2", available)
+            # print("available2", available)
             yololo = libraries_selection + [{
                 "library_id": library_id,
                 "nb_books": len(library["l_books_ids"]),
@@ -171,7 +176,7 @@ def brut_force_solve(problem, libraries_selection):
             best_selection_score, _ = get_selection_score(problem, best_selection)
             if this_selection_score >= best_selection_score:
                 best_selection_that_include_this_library = [
-                    {**s, "book_ids": sending_record[i][2]}
+                    {**s, 'nb_books': sending_record[i][1], "book_ids": sending_record[i][2]}
                     for (i, s) in enumerate(best_selection_that_include_this_library)
                 ]
                 best_selection = best_selection_that_include_this_library
@@ -183,7 +188,7 @@ def main():
     print("hello world !")
     from pprint import pprint
     print("==problem====")
-    problem = parse_input_file("input/a_example.txt")
+    problem = parse_input_file("input/b_read_on.txt")
     print(problem)
     print("============")
     solution = brut_force_solve(problem, [])

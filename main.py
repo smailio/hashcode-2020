@@ -1,5 +1,5 @@
 def grouped(iterable, n):
-    return zip(*[iter(iterable)]*n)
+    return zip(*[iter(iterable)] * n)
 
 
 def line_to_ints(l):
@@ -22,6 +22,7 @@ def parse_input_file(path):
                     "shipping_rate": shipping_rate,
                     "l_books_ids": l_books_ids
                 }
+
         return {
             'nb_books': nb_books,
             'nb_libraries': nb_libraries,
@@ -32,11 +33,13 @@ def parse_input_file(path):
 
 
 def get_score(
-        signup_duration: int, book_ids: tuple, book_values: tuple, books_per_day: int, signup_day, end_day,
+        signup_duration: int, book_ids: tuple, book_values: tuple,
+        books_per_day: int, signup_day, end_day,
         scanned_book_ids: list,
 ):
     assert len(book_ids) == len(book_values)
-    book_index = tuple(i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
+    book_index = tuple(
+        i for i in range(len(book_ids)) if book_ids[i] not in scanned_book_ids)
     book_ids = tuple(book_ids[i] for i in book_index)
     book_values = tuple(book_values[i] for i in book_index)
     book_values_and_ids = tuple(zip(book_values, book_ids))
@@ -160,13 +163,17 @@ def brut_force_solve(problem, libraries_selection):
                 problem,
                 yololo
             )
-            this_selection_score = get_selection_score(
+            this_selection_score, sending_record = get_selection_score(
                 problem,
                 best_selection_that_include_this_library
             )
             print("this_selection", this_selection_score, yololo)
-            best_selection_score = get_selection_score(problem, best_selection)
+            best_selection_score, _ = get_selection_score(problem, best_selection)
             if this_selection_score >= best_selection_score:
+                best_selection_that_include_this_library = [
+                    {**s, "book_ids": sending_record[i][2]}
+                    for (i, s) in enumerate(best_selection_that_include_this_library)
+                ]
                 best_selection = best_selection_that_include_this_library
 
     return best_selection

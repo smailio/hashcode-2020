@@ -99,6 +99,7 @@ def get_selection_score(problem, library_selection):
     day = 0
     nb_days = problem['nb_days']
     scanned_book_ids = []
+    sending_record = []
     for x in library_selection:
         library_id = x['library_id']
         library = problem['libraries'][library_id]
@@ -119,8 +120,12 @@ def get_selection_score(problem, library_selection):
         )
         value += added
         scanned_book_ids.extend(new_scanned_book_ids)
-
-    return value
+        sending_record.append([
+            library_id,
+            len(new_scanned_book_ids),
+            new_scanned_book_ids,
+        ])
+    return value, sending_record
 
 
 def submit_solutions(solutions: [{}]):

@@ -31,13 +31,13 @@ def parse_input_file(path):
         }
 
 
-
-def submit_solutions(d: [[]]):
+def submit_solutions(d: [{}]):
     """
 
     :param d: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
     """
     pass
+
 
 def main():
     print("hello world !")

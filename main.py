@@ -99,11 +99,12 @@ def get_selection_score(problem, library_selection):
     day = 0
     nb_days = problem['nb_days']
     scanned_book_ids = []
+    print("li", library_selection)
     for x in library_selection:
         library_id = x['library_id']
         library = problem['libraries'][library_id]
         signup_duration = library['signup_time']
-        book_ids = library['l_book_ids']
+        book_ids = library['l_books_ids']
         book_values = tuple(problem['books_score'][i] for i in book_ids)
         books_per_day = library['shipping_rate']
         signup_day = day
@@ -117,6 +118,7 @@ def get_selection_score(problem, library_selection):
             end_day=nb_days - 1,
             scanned_book_ids=scanned_book_ids,
         )
+        print("added", added)
         value += added
         scanned_book_ids.extend(new_scanned_book_ids)
 
@@ -132,20 +134,35 @@ def submit_solutions(solutions: [{}]):
 
 
 def brut_force_solve(problem, libraries_selection):
+    # print("bfs",  libraries_selection)
     best_selection = []
+    selected_ids = [l['library_id'] for l in libraries_selection]
+
+    available = [
+        library_id
+        for library_id, library in enumerate(problem["libraries"])
+        if library_id not in selected_ids
+    ]
+    if not available:
+        return libraries_selection
     for library_id, library in enumerate(problem["libraries"]):
-        if library_id not in [l['library_id'] for l in libraries_selection]:
+        if library_id in available:
+            libraries_selection += [{
+                "library_id": library_id,
+                "nb_books": len(library["l_books_ids"]),
+                "book_ids": library["l_books_ids"]
+            }]
             best_selection_that_include_this_library = brut_force_solve(
                 problem,
-                libraries_selection + [{"library_id": library_id, "nb_books": len(library["l_books_ids"]),
-                                        "book_ids": library["l_books_ids"]}]
+                libraries_selection
             )
             this_selection_score = get_selection_score(
                 problem,
                 best_selection_that_include_this_library
             )
+            print("this_selection", this_selection_score, libraries_selection)
             best_selection_score = get_selection_score(problem, best_selection)
-            if this_selection_score > best_selection_score:
+            if this_selection_score >= best_selection_score:
                 best_selection = best_selection_that_include_this_library
 
     return best_selection
@@ -154,8 +171,13 @@ def brut_force_solve(problem, libraries_selection):
 def main():
     print("hello world !")
     from pprint import pprint
+    print("==problem====")
     problem = parse_input_file("input/a_example.txt")
-    pprint(brut_force_solve(problem, []))
+    print(problem)
+    print("============")
+    solution = brut_force_solve(problem, [])
+    print("*************")
+    pprint(solution)
 
 
 if __name__ == '__main__':

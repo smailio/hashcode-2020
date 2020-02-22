@@ -1,5 +1,5 @@
 import random
-
+import math
 
 def grouped(iterable, n):
     return zip(*[iter(iterable)] * n)
@@ -16,10 +16,11 @@ def parse_input_file(path):
         books_score = line_to_ints(lines[1])
 
         def parse_libraries():
-            for (l1, l2) in grouped(lines[2:], 2):
+            for (i, (l1, l2)) in enumerate(grouped(lines[2:], 2)):
                 (l_nb_books, signup_time, shipping_rate) = line_to_ints(l1)
                 l_books_ids = line_to_ints(l2)
                 yield {
+                    "library_id": i,
                     "l_nb_books": l_nb_books,
                     "signup_time": signup_time,
                     "shipping_rate": shipping_rate,
@@ -145,7 +146,7 @@ def submit_solutions(solutions: [{}]):
 def brut_force_solve(problem, libraries_selection):
     best_selection = []
     selected_ids = [l['library_id'] for l in libraries_selection]
-    print("selected_ids ", selected_ids)
+    # print("selected_ids ", selected_ids)
     all_availabe = [
         library_id
         for library_id, library in enumerate(problem["libraries"])
@@ -172,29 +173,200 @@ def brut_force_solve(problem, libraries_selection):
                 problem,
                 best_selection_that_include_this_library
             )
-            print("this_selection", this_selection_score, yololo)
-            best_selection_score, _ = get_selection_score(problem, best_selection)
+            # print("this_selection", this_selection_score, yololo)
+            best_selection_score, _ = get_selection_score(problem,
+                                                          best_selection)
             if this_selection_score >= best_selection_score:
                 best_selection_that_include_this_library = [
-                    {**s, 'nb_books': sending_record[i][1], "book_ids": sending_record[i][2]}
-                    for (i, s) in enumerate(best_selection_that_include_this_library)
+                    {**s, 'nb_books': sending_record[i][1],
+                     "book_ids": sending_record[i][2]}
+                    for (i, s) in
+                    enumerate(best_selection_that_include_this_library)
                 ]
                 best_selection = best_selection_that_include_this_library
 
     return best_selection
 
 
+def solve_sort(problem):
+    problem["libraries"] = [
+        {
+            **l,
+            "biggest_books": sorted(
+                l["l_books_ids"],
+                key=lambda book_id: problem["books_score"][book_id],
+                reverse=True
+            )
+        }
+        for l in problem["libraries"]
+    ]
+    solutions = {
+        "libraries": [],
+        "selected_books": [],
+        "remaining_days": problem["nb_days"]
+    }
+    i = 0
+    while remaining_days(problem, solutions["libraries"]) > 0 and available_libraries(
+            problem, solutions):
+        s = best_next_library(problem, solutions)
+        solutions["libraries"] += [s]
+        solutions["selected_books"] = selected_books(solutions["libraries"] )
+        solutions["remaining_days"] = remaining_days(problem, solutions["libraries"])
+        i += 1
+        print("i", i)
+        # solutions[i] = s
+        # problem['libraries'] = [
+        #     l
+        #     for (i, l) in enumerate(problem['libraries'])
+        #     if i != s["library_id"]
+        # ]
+    return solutions
+
+
+def remaining_days(problem, selection):
+    libraries = problem['libraries']
+    # print("remaining_days", selection)
+    nb_days = problem["nb_days"]
+    return nb_days - sum([
+        libraries[library_id]["signup_time"]
+        for library_id in [s["library_id"] for s in selection]
+    ])
+
+
+def available_libraries(problem, solution):
+    selected_libraries = {l["library_id"] for l in solution["libraries"]}
+
+    return [
+        library for library in problem["libraries"]
+        if library['library_id'] not in selected_libraries
+    ]
+
+
+def selected_books(solution):
+    return {
+        book_id
+        for l in solution
+        for book_id in l["book_ids"]
+    }
+
+
+def best_next_library(problem, solution: []):
+    """
+
+    :param problem:
+    :param solution: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
+    :return:
+    """
+    libraries = problem['libraries']
+
+    # print("selected_books", selected_books(solution))
+
+    def best_book_selection(library, solution, fill_with_shit=False):
+        signup_time = library["signup_time"]
+        shipping_rate = library["shipping_rate"]
+        l_unselected_books_ids = [
+            book_id
+            for book_id in library['biggest_books']
+            if book_id not in solution["selected_books"]
+        ]
+        volume = min(1, shipping_rate * (solution["remaining_days"] - signup_time))
+        # print("volume", volume)
+        books_selection = l_unselected_books_ids[:volume]
+        # print("books_selection", books_selection)
+        if fill_with_shit:
+            return books_selection + l_unselected_books_ids[volume:]
+        else :
+            return books_selection
+
+    # def turnover()
+    def sort_key(library):
+        # l_nb_books = library["l_nb_books"]
+        books_score = problem["books_score"]
+        books_selection = best_book_selection(library, solution)
+        return - library["signup_time"], sum(books_score[book_id] for book_id in books_selection)
+
+    next_library = max(available_libraries(problem, solution), key=sort_key)
+    next_library_books_id = best_book_selection(next_library, solution, fill_with_shit=True)
+    return {
+        "library_id": next_library["library_id"],
+        "book_ids": next_library_books_id,
+        "nb_books": len(next_library_books_id)
+    }
+
+
+# def keep_best_half(problem):
+#     return {
+#         **problem,
+#         "libraries": sorted(problem["libraries"], key=lambda l: sum([
+#             problem['books_score'][book_id] for book_id in l["l_books_ids"]
+#         ]))[:10],
+#
+#     }
+
+
+def google_score(problem, solution):
+    books_score = problem["books_score"]
+    nb_days = problem["nb_days"]
+    libraries = problem['libraries']
+    score = 0
+    selected_book_ids = set()
+    for l in solution["libraries"]:
+        l_id = l['library_id']
+        l_sign_up_time = libraries[l_id]['signup_time']
+        nb_days -= l_sign_up_time
+        for book_id in l["book_ids"]:
+            if book_id not in selected_book_ids:
+                selected_book_ids.add(book_id)
+                score += books_score[book_id]
+    return score
+
+
+def submit_solutions(problem_file_name, d: [{}]):
+    """
+    :param d: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
+    """
+    with open(f"{problem_file_name}_solution.txt", 'w') as f:
+        f.write(str(len(d['libraries'])))
+        for item in d["libraries"]:
+            f.write('\n')
+            f.write(str(item["library_id"]) + " " + str(item["nb_books"]))
+            f.write('\n')
+            f.write(' '.join([str(i) for i in item["book_ids"]]))
+
+    f.close()
+
+
 def main():
     print("hello world !")
     from pprint import pprint
     print("==problem====")
-    problem = parse_input_file("input/b_read_on.txt")
-    print(problem)
+    problem_filename = "input/a_example.txt"
+    problem = parse_input_file(problem_filename)
+    pprint(problem)
     print("============")
-    solution = brut_force_solve(problem, [])
+    solution = solve_sort(problem)
     print("*************")
     pprint(solution)
+    print('Oo' * 20)
+    print(google_score(problem, solution))
+    # submit_solutions(problem_filename, solution)
+
+
+def main3():
+    paths = [
+        "input/a_example.txt",
+        "input/b_read_on.txt",
+        "input/c_incunabula.txt",
+        "input/d_tough_choices.txt",
+        "input/e_so_many_books.txt",
+        "input/f_libraries_of_the_world.txt",
+    ]
+    for p in paths:
+        problem = parse_input_file(p)
+        solution = solve_sort(problem)
+        print(google_score(problem, solution))
+        submit_solutions(p, solution)
 
 
 if __name__ == '__main__':
-    main()
+    main3()

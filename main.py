@@ -1,6 +1,7 @@
 import random
 import math
 
+
 def grouped(iterable, n):
     return zip(*[iter(iterable)] * n)
 
@@ -188,30 +189,57 @@ def brut_force_solve(problem, libraries_selection):
     return best_selection
 
 
-def solve_sort(problem):
+def add_stats(problem):
     problem["libraries"] = [
         {
-            **l,
+            **library,
             "biggest_books": sorted(
-                l["l_books_ids"],
+                library["l_books_ids"],
                 key=lambda book_id: problem["books_score"][book_id],
                 reverse=True
             )
         }
-        for l in problem["libraries"]
+        for library in problem["libraries"]
     ]
+    problem["libraries"] = [
+        {
+            **library,
+            "s_books_ids": set(library["l_books_ids"])
+        }
+        for library in problem["libraries"]
+    ]
+    problem["libraries"] = [
+        {
+            **library,
+            "specialness": - sum(
+                sum([
+                    1
+                    for other_library in problem["libraries"]
+                    if l_book_id in other_library["s_books_ids"]
+                ])
+                for l_book_id in library["l_books_ids"]
+            )
+        }
+        for library in problem["libraries"]
+    ]
+
+
+def solve_sort(problem):
+    add_stats(problem)
     solutions = {
         "libraries": [],
         "selected_books": [],
         "remaining_days": problem["nb_days"]
     }
     i = 0
-    while remaining_days(problem, solutions["libraries"]) > 0 and available_libraries(
-            problem, solutions):
+    while remaining_days(problem,
+                         solutions["libraries"]) > 0 and available_libraries(
+        problem, solutions):
         s = best_next_library(problem, solutions)
         solutions["libraries"] += [s]
-        solutions["selected_books"] = selected_books(solutions["libraries"] )
-        solutions["remaining_days"] = remaining_days(problem, solutions["libraries"])
+        solutions["selected_books"] = selected_books(solutions["libraries"])
+        solutions["remaining_days"] = remaining_days(problem,
+                                                     solutions["libraries"])
         i += 1
         print("i", i)
         # solutions[i] = s
@@ -225,7 +253,6 @@ def solve_sort(problem):
 
 def remaining_days(problem, selection):
     libraries = problem['libraries']
-    # print("remaining_days", selection)
     nb_days = problem["nb_days"]
     return nb_days - sum([
         libraries[library_id]["signup_time"]
@@ -257,9 +284,6 @@ def best_next_library(problem, solution: []):
     :param solution: [{"library_id" : 1, "nb_books": 3, "book_ids": [1, 5, 6, 4}]
     :return:
     """
-    libraries = problem['libraries']
-
-    # print("selected_books", selected_books(solution))
 
     def best_book_selection(library, solution, fill_with_shit=False):
         signup_time = library["signup_time"]
@@ -269,24 +293,28 @@ def best_next_library(problem, solution: []):
             for book_id in library['biggest_books']
             if book_id not in solution["selected_books"]
         ]
-        volume = min(1, shipping_rate * (solution["remaining_days"] - signup_time))
-        # print("volume", volume)
+        volume = min(1,
+                     shipping_rate * (solution["remaining_days"] - signup_time))
         books_selection = l_unselected_books_ids[:volume]
-        # print("books_selection", books_selection)
         if fill_with_shit:
             return books_selection + l_unselected_books_ids[volume:]
-        else :
+        else:
             return books_selection
 
-    # def turnover()
-    def sort_key(library):
-        # l_nb_books = library["l_nb_books"]
+    def turnover(library):
         books_score = problem["books_score"]
         books_selection = best_book_selection(library, solution)
-        return - library["signup_time"], sum(books_score[book_id] for book_id in books_selection)
+        return sum(books_score[book_id] for book_id in books_selection)
+
+    # def speciallness(library, solution):
+    #     return len([library])
+
+    def sort_key(library):
+        corrected_signup_time = - round(math.log(library["signup_time"], 3), 2)
+        return corrected_signup_time, library["specialness"], turnover(library)
 
     next_library = max(available_libraries(problem, solution), key=sort_key)
-    next_library_books_id = best_book_selection(next_library, solution, fill_with_shit=True)
+    next_library_books_id = best_book_selection(next_library, solution)
     return {
         "library_id": next_library["library_id"],
         "book_ids": next_library_books_id,

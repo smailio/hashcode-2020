@@ -1,5 +1,6 @@
 import random
 import math
+import toolz
 
 
 def grouped(iterable, n):
@@ -208,15 +209,21 @@ def add_stats(problem):
         }
         for library in problem["libraries"]
     ]
+    problem["book_specialness"] = {
+        book_id: sum([
+            1
+            for other_library in problem["libraries"]
+            if book_id in other_library["s_books_ids"]
+        ])
+        for book_id in set(toolz.concatv(
+            [library["l_books_ids"] for library in problem["libraries"]])
+        )
+    }
     problem["libraries"] = [
         {
             **library,
             "specialness": - sum(
-                sum([
-                    1
-                    for other_library in problem["libraries"]
-                    if l_book_id in other_library["s_books_ids"]
-                ])
+                sum(problem["book_specialness"][l_book_id])
                 for l_book_id in library["l_books_ids"]
             )
         }
